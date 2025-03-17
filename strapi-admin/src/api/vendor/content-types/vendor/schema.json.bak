@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vendors",
+  "info": {
+    "singularName": "vendor",
+    "pluralName": "vendors",
+    "displayName": "Vendor",
+    "description": "Manage product vendors with multiple service pincodes"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "address": {
+      "type": "text",
+      "required": true
+    },
+    "pincode": {
+      "type": "string",
+      "required": true,
+      "description": "Primary pincode of the vendor"
+    },
+    "gstin": {
+      "type": "string"
+    },
+    "fssai_license": {
+      "type": "string"
+    },
+    "password": {
+      "type": "password",
+      "private": true
+    },
+    "service_pincodes": {
+      "type": "json",
+      "required": true,
+      "description": "Array of pincodes where the vendor provides service"
+    },
+    "delivery_message": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "products": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::product.product",
+      "mappedBy": "vendor"
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::category.category",
+      "mappedBy": "vendor"
+    },
+    "orders": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::order.order",
+      "mappedBy": "vendor"
+    }
+  }
+} 

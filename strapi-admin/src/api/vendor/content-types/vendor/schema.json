@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vendors",
+  "info": {
+    "singularName": "vendor",
+    "pluralName": "vendors",
+    "displayName": "Vendor",
+    "description": "Vendor information with service pincodes"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "address": {
+      "type": "text",
+      "required": true
+    },
+    "fssai_license": {
+      "type": "string"
+    },
+    "gstin": {
+      "type": "string"
+    },
+    "password": {
+      "type": "password",
+      "private": true
+    },
+    "service_pincodes": {
+      "type": "json",
+      "required": true,
+      "description": "Array of pincodes where the vendor provides service"
+    },
+    "delivery_message": {
+      "type": "string"
+    },
+    "products": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::product.product",
+      "inversedBy": "vendors"
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "inversedBy": "vendors"
+    }
+  }
+} 

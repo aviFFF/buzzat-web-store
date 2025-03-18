@@ -53,6 +53,12 @@
         "Delivered"
       ],
       "default": "Pending"
+    },
+    "vendor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::vendor.vendor",
+      "inversedBy": "orders"
     }
   }
 }

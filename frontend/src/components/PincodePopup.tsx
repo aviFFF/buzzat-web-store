@@ -12,9 +12,6 @@ interface PincodePopupProps {
   onPincodeSet: (pincode: string, isServiceable: boolean, message: string) => void;
 }
 
-// Sample pincodes for demonstration - replace with your actual pincodes
-const SAMPLE_PINCODES = ['110001', '110002', '110003', '400001', '400002', '500001', '600001'];
-
 export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProps) {
   const [pincode, setPincode] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -22,29 +19,7 @@ export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProp
   const [error, setError] = useState('');
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Close popup when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onClose]);
 
-  // Filter suggestions as user types
-  useEffect(() => {
-    if (pincode.length >= 3) {
-      const filtered = SAMPLE_PINCODES.filter(p => p.startsWith(pincode));
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  }, [pincode]);
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ''); // Only allow digits
@@ -107,14 +82,6 @@ export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProp
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Enter Your Pincode</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
           
           <p className="text-gray-600 mb-6">
@@ -166,25 +133,6 @@ export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProp
               <p className="text-red-600">{error}</p>
             </div>
           )}
-          
-          <div className="mt-6 text-sm text-gray-500">
-            <p>We deliver to select areas. Enter your pincode to check availability.</p>
-          </div>
-        </div>
-        
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Popular Pincodes</h3>
-          <div className="flex flex-wrap gap-2">
-            {SAMPLE_PINCODES.slice(0, 5).map((code) => (
-              <button
-                key={code}
-                onClick={() => selectSuggestion(code)}
-                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors"
-              >
-                {code}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

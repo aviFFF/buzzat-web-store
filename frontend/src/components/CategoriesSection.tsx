@@ -92,7 +92,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
         
         return (  
           <Link 
-            href={`/category/${category.attributes?.name}`} 
+            href={`/product-category/${encodeURIComponent(category.attributes?.slug || category.attributes?.name || '')}`} 
             key={category.id}
             className="group"
           >

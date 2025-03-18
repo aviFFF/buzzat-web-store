@@ -1,9 +1,10 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity } from '@/utils/cartUtils';
+import { CartItem, addToCart, updateCartItemQuantity, getCartItems } from '@/utils/cartUtils';
+import { checkPincodeServiceability } from '@/services/pincode';
 
 interface Product {
   id: number;
@@ -23,69 +24,138 @@ interface Product {
         };
       };
     };
-  };
-  // For direct objects (not from Strapi API)
-  name?: string;
-  slug?: string;
-  mrp?: number;
-  sellingPrice?: number;
-  description?: string;
-  image?: {
-    url?: string;
+    images?: {
+      data?: Array<{
+        attributes?: {
+          url: string;
+          formats?: {
+            thumbnail?: { url: string };
+          };
+        };
+      }>;
+    };
   };
 }
 
-interface ProductsSectionProps {
-  products: Product[];
+interface ProductListProps {
+  categorySlug: string;
+  pincode?: string;
 }
 
-export default function ProductsSection({ products }: ProductsSectionProps) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartQuantities, setCartQuantities] = useState<{[key: number]: number}>({});
+export default function ProductList({ categorySlug, pincode = '110001' }: ProductListProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPincode, setCurrentPincode] = useState<string | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [cartQuantities, setCartQuantities] = useState<{[key: number]: number}>(() => {
+    // Initialize quantities from saved cart
+    const savedCart = getCartItems();
+    const quantities: {[key: number]: number} = {};
+    savedCart.forEach((item: CartItem) => {
+      quantities[item.id] = item.quantity;
+    });
+    return quantities;
+  });
+  
   const [imageStatus, setImageStatus] = useState<{[key: number]: 'loading' | 'loaded' | 'error'}>({});
   const [addedToCartId, setAddedToCartId] = useState<number | null>(null);
 
-  // Load cart from localStorage on component mount
-  useEffect(() => {
-    const loadCart = () => {
-      const items = getCartItems();
-      setCartItems(items);
+  // Memoize the fetch function to avoid recreating it on every render
+  const fetchProductsForPincodeAndCategory = useCallback(async (pincode: string, categorySlug: string) => {
+    try {
+      // Clear previous products first
+      setProducts([]);
+      setLoading(true);
+      setError(null);
       
-      // Initialize quantities from saved cart
-      const quantities: {[key: number]: number} = {};
-      items.forEach((item: CartItem) => {
-        quantities[item.id] = item.quantity;
-      });
-      setCartQuantities(quantities);
-    };
-    
-    loadCart();
-    
-    // Listen for cart updates
-    const handleCartUpdate = () => {
-      loadCart();
-    };
-    
-    window.addEventListener('cart-updated', handleCartUpdate);
-    
-    return () => {
-      window.removeEventListener('cart-updated', handleCartUpdate);
-    };
+      console.log(`Fetching products for pincode: ${pincode} and category: ${categorySlug}`);
+      const response = await checkPincodeServiceability(pincode);
+      console.log('API response for pincode:', pincode, response);
+      
+      if (response.serviceable) {
+        // If we have products in the response
+        if (response.products && Array.isArray(response.products) && response.products.length > 0) {
+          console.log('Products found for pincode:', response.products.length);
+          
+          // Filter products by category
+          const filteredProducts = response.products.filter((product: any) => {
+            // Check if product has categories
+            if (product.categories && Array.isArray(product.categories)) {
+              // Check if any category matches the categorySlug
+              return product.categories.some((category: any) => 
+                category.attributes?.slug === categorySlug || 
+                category.slug === categorySlug
+              );
+            }
+            return false;
+          });
+          
+          console.log(`Found ${filteredProducts.length} products for category: ${categorySlug}`);
+          setProducts(filteredProducts);
+          
+          if (filteredProducts.length === 0) {
+            setError('No products available in this category for your location');
+          }
+        } else {
+          console.log('No products in response for pincode:', pincode);
+          setProducts([]);
+          setError('No products available for this pincode');
+        }
+      } else {
+        console.log('Pincode not serviceable:', pincode);
+        setProducts([]);
+        setError('Delivery not available for this location');
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError('Failed to load products. Please try again.');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    // Check if pincode or category has changed
+    if (pincode !== currentPincode || categorySlug !== currentCategory) {
+      console.log('Pincode or category changed:', { 
+        fromPincode: currentPincode, 
+        toPincode: pincode,
+        fromCategory: currentCategory,
+        toCategory: categorySlug
+      });
+      
+      setCurrentPincode(pincode);
+      setCurrentCategory(categorySlug);
+      
+      // Reset state when pincode or category changes
+      setLoading(true);
+      setError(null);
+      setProducts([]);
+      
+      // Only fetch if we have both pincode and category
+      if (pincode && categorySlug) {
+        fetchProductsForPincodeAndCategory(pincode, categorySlug);
+      } else {
+        setLoading(false);
+        console.log('Missing pincode or category slug');
+      }
+    }
+  }, [pincode, categorySlug, currentPincode, currentCategory, fetchProductsForPincodeAndCategory]);
+
   const getProductImageUrl = (product: Product): string | null => {
-    // Check for image in attributes structure (from API)
+    // Check for image in attributes structure
     if (product.attributes?.image?.data?.attributes?.url) {
       return product.attributes.image.data.attributes.url;
     }
     
-    // Check for direct image URL (from direct object)
-    if (product.image?.url) {
-      return product.image.url;
+    // Check for images array
+    if (product.attributes?.images?.data?.[0]?.attributes?.url) {
+      return product.attributes.images.data[0].attributes.url;
     }
     
     // If no image is found
-    console.log('No image found for product:', product.id);
     return null;
   };
 
@@ -97,14 +167,13 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
   };
 
   const handleImageError = (productId: number) => {
-    console.error(`Failed to load image for product ${productId}`);
     setImageStatus(prev => ({
       ...prev,
       [productId]: 'error'
     }));
   };
 
-  const addToCart = (product: Product) => {
+  const handleAddToCart = (product: Product) => {
     const imageUrl = getProductImageUrl(product);
     
     // Create cart item
@@ -118,12 +187,12 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
     };
     
     // Add to cart using utility function
-    addItemToCart(newItem);
+    addToCart(newItem);
     
     // Update local state
     setCartQuantities(prev => ({
       ...prev,
-      [product.id]: (prev[product.id] || 0)
+      [product.id]: (prev[product.id] || 0) + 1
     }));
     
     // Show visual feedback
@@ -133,7 +202,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
     }, 1500);
   };
 
-  const updateQuantity = (productId: number, newQuantity: number) => {
+  const handleUpdateQuantity = (productId: number, newQuantity: number) => {
     // Update cart using utility function
     updateCartItemQuantity(productId, newQuantity);
     
@@ -152,13 +221,42 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((key) => (
+          <div key={key} className="bg-gray-200 animate-pulse h-64 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">{error}</p>
+        <p className="text-gray-500 mt-2">Please try another pincode or check back later.</p>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-700 mb-2">No products found</h3>
+        <p className="text-gray-500 mb-4">There are no products in this category for your location.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((product) => {
         // Check if product has valid attributes and slug
         if (!product.attributes || !product.attributes.slug) {
-          console.warn('Product missing slug:', product.id);
-          console.log('Product:', product);
           return null;
         }
         
@@ -170,16 +268,16 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
         return (
           <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
             {/* Image section with link to product detail */}
-            <Link href={`/product/${product?.attributes?.slug}`} className="block">
-              <div className="relative h-28 sm:h-32 w-full bg-gray-200">
+            <Link href={`/product/${product.attributes.slug}`} className="block">
+              <div className="relative h-40 sm:h-48 w-full bg-gray-200">
                 {imageUrl ? (
                   <>
-                  <Image
+                    <Image
                       src={imageUrl}
-                    alt={product.attributes.name}
-                    fill
-                      sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
-                    className="object-cover"
+                      alt={product.attributes.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                      className="object-cover"
                       onLoad={() => handleImageLoad(product.id)}
                       onError={() => handleImageError(product.id)}
                       unoptimized={true} // Skip Next.js image optimization for external URLs
@@ -220,7 +318,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
               </div>
             </Link>
             
-            <div className="p-2 sm:p-3">
+            <div className="p-3 sm:p-4">
               {/* Product name with link */}
               <Link href={`/product/${product.attributes.slug}`} className="block">
                 <h3 className="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors line-clamp-2 h-10">
@@ -228,15 +326,15 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                 </h3>
               </Link>
               
-              <div className="mt-1 flex items-center justify-between">
+              <div className="mt-2 flex items-center justify-between">
                 <div>
                   <span className="text-sm font-bold text-gray-900">
                     ₹{product.attributes.sellingPrice}
                   </span>
                   {product.attributes.mrp > product.attributes.sellingPrice && (
                     <span className="ml-1 text-xs text-gray-500 line-through">
-                        ₹{product.attributes.mrp}
-                      </span>
+                      ₹{product.attributes.mrp}
+                    </span>
                   )}
                 </div>
                 {product.attributes.mrp > product.attributes.sellingPrice && (
@@ -247,30 +345,30 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
               </div>
               
               {/* Cart Controls */}
-              <div className="mt-2">
+              <div className="mt-3">
                 {quantity === 0 ? (
                   // Add to Cart Button
                   <button
-                    onClick={() => addToCart(product)}
-                    className="w-full py-1 px-2 rounded-lg text-xs font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full py-1.5 px-3 rounded-lg text-sm font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    Add
+                    Add to Cart
                   </button>
                 ) : (
                   // Quantity Controls
                   <div className="flex items-center justify-between border border-gray-300 rounded-lg overflow-hidden">
                     <button 
-                      onClick={() => updateQuantity(product.id, quantity - 1)}
-                      className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
+                      onClick={() => handleUpdateQuantity(product.id, quantity - 1)}
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                     >
                       -
                     </button>
-                    <span className="px-2 py-1 bg-white text-center text-sm w-full">
+                    <span className="px-3 py-1.5 bg-white text-center text-sm w-full">
                       {quantity}
                     </span>
                     <button 
-                      onClick={() => updateQuantity(product.id, quantity + 1)}
-                      className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
+                      onClick={() => handleUpdateQuantity(product.id, quantity + 1)}
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                     >
                       +
                     </button>

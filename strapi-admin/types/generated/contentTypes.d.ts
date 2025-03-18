@@ -468,6 +468,7 @@ export interface ApiOrderOrder extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     userid: Schema.Attribute.BigInteger;
+    vendor: Schema.Attribute.Relation<'manyToOne', 'api::vendor.vendor'>;
   };
 }
 
@@ -542,6 +543,7 @@ export interface ApiVendorVendor extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    orders: Schema.Attribute.Relation<'oneToMany', 'api::order.order'>;
     password: Schema.Attribute.Password & Schema.Attribute.Private;
     phone: Schema.Attribute.String & Schema.Attribute.Required;
     products: Schema.Attribute.Relation<'manyToMany', 'api::product.product'>;

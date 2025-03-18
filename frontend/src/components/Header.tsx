@@ -430,20 +430,20 @@ export default function Header({
                 )}
               </div>
             ) : (
-              <button 
+            <button 
                 onClick={() => setShowAuthPopup(true)}
-                className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
-              >
+              className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
                 <span className="hidden md:inline">Login</span>
-              </button>
+            </button>
             )}
             
             <button 
               onClick={() => setShowCartSlider(true)}
-              className="cart-trigger flex items-center text-gray-700 hover:text-blue-600 transition-colors relative"
+              className="cart-trigger flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors relative"
             >
               {cartTotals.totalItems > 0 && (
                 <span className="absolute -top-3 right-0 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -470,7 +470,7 @@ export default function Header({
                 </div>
               </Link>
 
-              {/* Pincode (Mobile) */}
+                             {/* Pincode (Mobile) */}
               <div className="flex-shrink-0">
                 {renderPincodeInfo(true)}
               </div>
@@ -537,14 +537,14 @@ export default function Header({
                     )}
                   </div>
                 ) : (
-                  <button 
+                <button 
                     onClick={() => setShowAuthPopup(true)}
-                    className="text-gray-700 hover:text-blue-600 transition-colors"
-                  >
+                  className="text-gray-700 hover:text-blue-600 transition-colors"
+                >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </button>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </button>
                 )}
                 
                 <button 
@@ -673,13 +673,13 @@ export default function Header({
                     <span>₹{cartTotals.total}</span>
                   </div>
                   {isAuthenticated ? (
-                    <Link 
-                      href="/checkout"
-                      className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                      onClick={() => setShowCartSlider(false)}
-                    >
-                      Proceed to Checkout
-                    </Link>
+                  <Link 
+                    href="/checkout"
+                    className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                    onClick={() => setShowCartSlider(false)}
+                  >
+                    Proceed to Checkout
+                  </Link>
                   ) : (
                     <button
                       onClick={() => {

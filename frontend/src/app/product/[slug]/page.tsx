@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -106,7 +107,7 @@ export default function ProductPage({ params }: { params: any }) {
       const timer = setTimeout(() => {
         setNotification({show: false, message: ''});
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [notification.show]);
@@ -356,7 +357,7 @@ export default function ProductPage({ params }: { params: any }) {
             {notification.message}
           </div>
         )}
-        
+
         {/* Delivery info */}
         {isServiceable && deliveryMessage && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
@@ -370,7 +371,7 @@ export default function ProductPage({ params }: { params: any }) {
             </div>
           </div>
         )}
-        
+
         {/* Breadcrumb */}
         <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-sm">

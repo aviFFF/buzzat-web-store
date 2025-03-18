@@ -41,8 +41,8 @@ interface ProductsSectionProps {
 
 export default function ProductsSection({ products }: ProductsSectionProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartQuantities, setCartQuantities] = useState<{[key: number]: number}>({});
-  const [imageStatus, setImageStatus] = useState<{[key: number]: 'loading' | 'loaded' | 'error'}>({});
+  const [cartQuantities, setCartQuantities] = useState<{ [key: number]: number }>({});
+  const [imageStatus, setImageStatus] = useState<{ [key: number]: 'loading' | 'loaded' | 'error' }>({});
   const [addedToCartId, setAddedToCartId] = useState<number | null>(null);
 
   // Load cart from localStorage on component mount
@@ -50,40 +50,43 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
     const loadCart = () => {
       const items = getCartItems();
       setCartItems(items);
-      
+
       // Initialize quantities from saved cart
-      const quantities: {[key: number]: number} = {};
+      const quantities: { [key: number]: number } = {};
       items.forEach((item: CartItem) => {
         quantities[item.id] = item.quantity;
       });
       setCartQuantities(quantities);
     };
-    
+
     loadCart();
-    
+
+
     // Listen for cart updates
     const handleCartUpdate = () => {
       loadCart();
     };
-    
+
     window.addEventListener('cart-updated', handleCartUpdate);
-    
+
     return () => {
       window.removeEventListener('cart-updated', handleCartUpdate);
     };
   }, []);
+
+  console.log('cartStateItem : ', cartItems)
 
   const getProductImageUrl = (product: Product): string | null => {
     // Check for image in attributes structure (from API)
     if (product.attributes?.image?.data?.attributes?.url) {
       return product.attributes.image.data.attributes.url;
     }
-    
+
     // Check for direct image URL (from direct object)
     if (product.image?.url) {
       return product.image.url;
     }
-    
+
     // If no image is found
     console.log('No image found for product:', product.id);
     return null;
@@ -106,26 +109,26 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
 
   const addToCart = (product: Product) => {
     const imageUrl = getProductImageUrl(product);
-    
+
     // Create cart item
     const newItem: CartItem = {
       id: product.id,
       name: product.attributes.name,
       price: product.attributes.sellingPrice,
-      quantity: 1,
+      quantity: 0, //#bug1 fixing the cart add quantity by 2 to 1
       image: imageUrl || undefined,
       slug: product.attributes.slug
     };
-    
+
     // Add to cart using utility function
     addItemToCart(newItem);
-    
+
     // Update local state
     setCartQuantities(prev => ({
       ...prev,
       [product.id]: (prev[product.id] || 0)
     }));
-    
+
     // Show visual feedback
     setAddedToCartId(product.id);
     setTimeout(() => {
@@ -136,7 +139,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
   const updateQuantity = (productId: number, newQuantity: number) => {
     // Update cart using utility function
     updateCartItemQuantity(productId, newQuantity);
-    
+
     // Update local state
     if (newQuantity <= 0) {
       setCartQuantities(prev => {
@@ -161,12 +164,12 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
           console.log('Product:', product);
           return null;
         }
-        
+
         const imageUrl = getProductImageUrl(product);
         const quantity = cartQuantities[product.id] || 0;
         const imgStatus = imageStatus[product.id] || 'loading';
         const isAddedToCart = addedToCartId === product.id;
-        
+
         return (
           <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
             {/* Image section with link to product detail */}
@@ -219,7 +222,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                 )}
               </div>
             </Link>
-            
+
             <div className="p-2 sm:p-3">
               {/* Product name with link */}
               <Link href={`/product/${product.attributes.slug}`} className="block">
@@ -227,7 +230,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                   {product.attributes.name}
                 </h3>
               </Link>
-              
+
               <div className="mt-1 flex items-center justify-between">
                 <div>
                   <span className="text-sm font-bold text-gray-900">
@@ -245,7 +248,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                   </span>
                 )}
               </div>
-              
+
               {/* Cart Controls */}
               <div className="mt-2">
                 {quantity === 0 ? (
@@ -259,7 +262,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                 ) : (
                   // Quantity Controls
                   <div className="flex items-center justify-between border border-gray-300 rounded-lg overflow-hidden">
-                    <button 
+                    <button
                       onClick={() => updateQuantity(product.id, quantity - 1)}
                       className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                     >
@@ -268,8 +271,8 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                     <span className="px-2 py-1 bg-white text-center text-sm w-full">
                       {quantity}
                     </span>
-                    <button 
-                      onClick={() => updateQuantity(product.id, quantity + 1)}
+                    <button
+                      onClick={() => updateQuantity(product.id, quantity +1)}
                       className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                     >
                       +

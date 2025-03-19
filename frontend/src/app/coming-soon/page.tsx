@@ -57,13 +57,6 @@ export default function ComingSoonPage() {
 
   return (
     <>
-      <Header 
-        pincode={pincode}
-        isServiceable={isServiceable}
-        deliveryMessage={deliveryMessage}
-        onPincodeChange={handlePincodeSet}
-      />
-      
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
         <div className="max-w-2xl w-full bg-white p-8 rounded-xl shadow-xl">
           <div className="text-center mb-8">

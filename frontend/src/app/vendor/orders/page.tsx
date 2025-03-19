@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 // Mock order data
 const initialOrders = [
@@ -49,6 +51,26 @@ export default function VendorOrders() {
   const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showNotification, setShowNotification] = useState(false);
+  const [vendorInfo, setVendorInfo] = useState<any>(null);
+  const router = useRouter();
+
+  // Check if vendor is logged in
+  useEffect(() => {
+    const storedVendorInfo = localStorage.getItem('vendorInfo');
+    if (!storedVendorInfo) {
+      toast.error('Please login to access the vendor dashboard');
+      router.push('/vendor');
+      return;
+    }
+    
+    try {
+      const parsedVendorInfo = JSON.parse(storedVendorInfo);
+      setVendorInfo(parsedVendorInfo);
+    } catch (error) {
+      console.error('Error parsing vendor info:', error);
+      handleLogout();
+    }
+  }, [router]);
 
   // Simulate receiving a new order notification
   useEffect(() => {
@@ -92,6 +114,18 @@ export default function VendorOrders() {
     }, 5000);
   };
 
+  const handleLogout = () => {
+    // Clear vendor info from localStorage
+    localStorage.removeItem('vendorInfo');
+    localStorage.removeItem('vendorToken');
+    
+    // Show success message
+    toast.success('Logged out successfully');
+    
+    // Redirect to vendor login page
+    router.push('/vendor');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -114,6 +148,11 @@ export default function VendorOrders() {
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
+          {vendorInfo && (
+            <p className="mt-1 text-sm text-gray-500">
+              Logged in as: {vendorInfo.name} ({vendorInfo.phone})
+            </p>
+          )}
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
           <Link
@@ -128,6 +167,15 @@ export default function VendorOrders() {
           >
             Products
           </Link>
+          <button
+            onClick={handleLogout}
+            className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
         </div>
       </div>
 
@@ -266,7 +314,8 @@ export default function VendorOrders() {
           <p className="text-gray-500">No notifications yet.</p>
         ) : (
           <ul className="divide-y divide-gray-200 bg-white shadow overflow-hidden sm:rounded-md">
-            {notifications.map((notification, index) => (
+            {notifications.map((notification
+, index) => (
               <li key={index} className="px-4 py-4 sm:px-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">

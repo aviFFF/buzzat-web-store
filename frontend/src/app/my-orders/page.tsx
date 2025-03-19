@@ -96,14 +96,7 @@ export default function MyOrdersPage() {
   };
   
   return (
-    <>
-      <Header 
-        pincode={pincode}
-        isServiceable={isServiceable}
-        deliveryMessage={deliveryMessage}
-        onPincodeChange={handlePincodeChange}
-      />
-      
+    <>      
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">My Orders</h1>

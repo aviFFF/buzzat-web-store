@@ -7,7 +7,6 @@ import { Suspense } from 'react';
 import ProductsSection from '../components/ProductsSection';
 import PincodeBasedCategories from '@/components/PincodeBasedCategories';
 import PincodePopup from '@/components/PincodePopup';
-import Header from '@/components/Header';
 import BannerCards from '@/components/BannerCards';
 import { useAuth } from '@/context/AuthContext';
 
@@ -83,13 +82,6 @@ export default function Home() {
 
   return (
     <>
-      <Header 
-        pincode={pincode}
-        isServiceable={isServiceable}
-        deliveryMessage={deliveryMessage}
-        onPincodeChange={handlePincodeSet}
-      />
-      
       <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
         <div className="w-full max-w-7xl mx-auto">
           {/* Banner Cards Section */}

@@ -14,4 +14,5 @@ export default factories.createCoreRouter('api::vendor.vendor', {
       auth: false,
     },
   },
+  // Define custom routes in a separate file or follow Strapi's routing conventions.
 });

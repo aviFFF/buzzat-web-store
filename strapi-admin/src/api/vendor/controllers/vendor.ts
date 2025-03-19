@@ -334,5 +334,60 @@ export default factories.createCoreController('api::vendor.vendor', ({ strapi })
       console.error('Error checking pincode serviceability:', error);
       return ctx.badRequest('Error checking pincode serviceability: ' + error.message);
     }
+  },
+  
+  async login(ctx) {
+    try {
+      const { phone, password } = ctx.request.body;
+      
+      if (!phone || !password) {
+        return ctx.badRequest('Phone number and password are required');
+      }
+      
+      // Find the vendor by phone number
+      const vendors = await strapi.entityService.findMany('api::vendor.vendor', {
+        filters: { phone },
+      });
+      
+      if (!vendors || vendors.length === 0) {
+        return ctx.badRequest('No vendor found with this phone number');
+      }
+      
+      const vendor = vendors[0];
+      
+      // In a real application, you would hash the password and compare it
+      // For this example, we're assuming the password is stored in plain text
+      // IMPORTANT: In production, NEVER store passwords in plain text
+      
+      // Check if password matches (this is a simplified example)
+      // In production, use a proper password hashing library like bcrypt
+      if (vendor.password !== password) {
+        return ctx.badRequest('Invalid credentials');
+      }
+      
+      // Generate a JWT token
+      const token = strapi.plugins['users-permissions'].services.jwt.issue({
+        id: vendor.id,
+        isVendor: true,
+      });
+      
+      // Return the vendor data (excluding sensitive fields) and token
+      const sanitizedVendor = {
+        id: vendor.id,
+        name: vendor.name,
+        phone: vendor.phone,
+        address: vendor.address,
+        pincode: vendor.service_pincodes,
+      };
+      
+      return {
+        jwt: token,
+        vendor: sanitizedVendor,
+      };
+    } catch (error) {
+      console.error('Vendor login error:', error);
+      return ctx.badRequest('An error occurred during login');
+    }
   }
+  
 })); 

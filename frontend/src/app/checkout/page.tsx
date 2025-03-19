@@ -154,13 +154,6 @@ export default function CheckoutPage() {
   
   return (
     <>
-      <Header 
-        pincode={pincode}
-        isServiceable={isServiceable}
-        deliveryMessage={deliveryMessage}
-        onPincodeChange={handlePincodeChange}
-      />
-      
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Checkout</h1>

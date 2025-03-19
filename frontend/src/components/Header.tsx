@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import PincodeDisplay from './PincodeDisplay';
 import PincodePopup from './PincodePopup';
 import AuthPopup from './AuthPopup';
 import { motion, AnimatePresence } from 'framer-motion';

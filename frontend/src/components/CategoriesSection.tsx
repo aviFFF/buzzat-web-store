@@ -74,10 +74,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
         if (iconUrl && iconUrl.startsWith('/uploads/')) {
           const baseUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
           iconUrl = `${baseUrl}${iconUrl}`;
-        }
-        
-        console.log('Final icon URL:', iconUrl);
-        
+        }        
         // If the category already has icontype, keep it
         const formattedCategory = {
           ...category,
@@ -92,7 +89,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
         
         return (  
           <Link 
-            href={`/product-category/${encodeURIComponent(category.attributes?.slug || category.attributes?.name || '')}`} 
+            href={`/product-category/${encodeURIComponent(category?.attributes?.slug || category?.attributes?.name || '')}`} 
             key={category.id}
             className="group"
           >

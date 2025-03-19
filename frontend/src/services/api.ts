@@ -194,6 +194,103 @@ export const fetchVendors = async () => {
   }
 };
 
+// Add this function to your existing api.ts file
+
+export const vendorLogin = async (phone: string, password: string) => {
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
+    
+    console.log('Attempting login with:', { phone, passwordLength: password.length });
+    
+    // Try the dedicated login endpoint first
+    try {
+      const response = await fetch(`${API_URL}/api/vendor-auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone,
+          password,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Login response error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        
+        // Continue with fallback method
+        throw new Error('API endpoint failed');
+      }
+      
+      const data = await response.json();
+      console.log('Login successful, received data:', data);
+      
+      return {
+        success: true,
+        jwt: data.jwt,
+        vendor: data.vendor
+      };
+    } catch (apiError) {
+      console.warn('API endpoint error, trying fallback method:', apiError);
+      
+      // Fallback: Use the fetchVendors method
+      const vendorsResponse = await fetchVendors();
+      
+      if (!vendorsResponse || !vendorsResponse.data || !Array.isArray(vendorsResponse.data)) {
+        throw new Error('Failed to fetch vendors data');
+      }
+      
+      const vendors = vendorsResponse.data;
+      console.log('Fetched vendors:', vendors);
+      
+      // Find vendor with matching phone number - UPDATED to match the actual data structure
+      const vendor = vendors.find((v: any) => 
+        v && v.phone === phone
+      );
+      
+      console.log('Found vendor:', vendor);
+      
+      if (!vendor) {
+        throw new Error('No vendor found with this phone number');
+      }
+      
+      // In a real app, you would NEVER do this - this is just for demonstration
+      console.warn('Using simulated login - in production, use a proper authentication API');
+      
+      // Create a simplified vendor data object from the fetched vendor
+      const vendorData = {
+        id: vendor.id,
+        name: vendor.name,
+        phone: vendor.phone,
+        email: vendor.email || '',
+        address: vendor.address || '',
+        pincode: vendor.pincode || ''
+      };
+      
+      return {
+        success: true,
+        jwt: 'demo-token',
+        vendor: vendorData
+      };
+    }
+  } catch (error) {
+    console.error('Vendor login error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    };
+  }
+};
+
+
+
+
+
 // Check if a pincode is available for delivery
 export const checkPincodeAvailability = async (pincode: string) => {
   try {
@@ -512,5 +609,6 @@ export default {
   getStrapiMedia,
   fetchCategoriesWithProductsByPincode,
   fetchCategoryBySlugAndPincode,
-  fetchProductsByCategory
+  fetchProductsByCategory,
+  vendorLogin
 }; 

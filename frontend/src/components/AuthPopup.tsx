@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export interface AuthPopupProps {
   onClose: () => void;
-  onLogin: (userData: any) => void;
+  onLogin: (userData: any, token: string) => void;
   onLogout: () => void;
   redirectToCheckout?: boolean;
 }
@@ -60,12 +60,14 @@ export default function AuthPopup({ onClose, onLogin, onLogout, redirectToChecko
         // Login with Strapi
         const result = await loginUser(email, password);
         
+        console.log('Login result:', result);
+        
         if (!result.success) {
           throw new Error(result.error?.message || 'Login failed. Please check your credentials.');
         }
         
-        // Call the onLogin callback
-        onLogin(result.user);
+        // Call the onLogin callback with both user and token
+        onLogin(result.user, result.token);
         
         if (redirectToCheckout) {
           router.push('/checkout');
@@ -79,6 +81,8 @@ export default function AuthPopup({ onClose, onLogin, onLogout, redirectToChecko
           password
         });
         
+        console.log('Registration result:', result);
+        
         if (!result.success) {
           // Check for specific error messages
           const errorMsg = result.error?.message || '';
@@ -89,8 +93,8 @@ export default function AuthPopup({ onClose, onLogin, onLogout, redirectToChecko
           }
         }
         
-        // Call the onLogin callback
-        onLogin(result.user);
+        // Call the onLogin callback with both user and token
+        onLogin(result.user, result.token);
         
         if (redirectToCheckout) {
           router.push('/checkout');

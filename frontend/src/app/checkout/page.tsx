@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Header from '@/components/Header';
 import { getCartItems, getCartTotals, clearCart, CartItem } from '@/utils/cartUtils';
 import { toast } from 'sonner';
+import { createOrder } from '@/services/api';
+import { data } from 'framer-motion/client';
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
@@ -91,6 +92,11 @@ export default function CheckoutPage() {
     }
   }, [user]);
   
+  useEffect(() => {
+    console.log('Checkout page - Current user:', user);
+    console.log('User has JWT:', !!getAuthToken());
+  }, [user]);
+  
   const handlePincodeChange = (newPincode: string, newIsServiceable: boolean, newMessage: string) => {
     setPincode(newPincode);
     setIsServiceable(newIsServiceable);
@@ -105,50 +111,92 @@ export default function CheckoutPage() {
     }));
   };
   
+  // Add a helper function to get the token
+  const getAuthToken = () => {
+    // First try to get it from localStorage directly
+    const token = localStorage.getItem('token');
+    if (token) return token;
+    
+    // If not found, try to get it from the user object
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.jwt || null;
+      }
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+    }
+    
+    return null;
+  };
+
+  // Then in your component:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would typically send the order to your backend
     try {
-      // Example API call to create order (replace with actual implementation)
-      // const response = await fetch('/api/orders', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${user?.jwt}`
-      //   },
-      //   body: JSON.stringify({
-      //     items: cartItems,
-      //     totalAmount: cartTotals.total,
-      //     address,
-      //     paymentMethod
-      //   })
-      // });
+      // Format cart items for the order
+      const productIds = cartItems.map(item => item.id);
       
-      // const data = await response.json();
+      console.log('productIds:', productIds);
+      // Create order data object - only include fields that exist in Strapi
+      const orderData = {
+        name: address.name,
+        email: user?.email || '',
+        phone: address.phone,
+        pincode: address.pincode,
+        address: address.street,
+        city: address.city,
+        totalOrderValue: cartTotals.total,
+        userid: user?.id ? Number(user.id) : undefined,
+        DeliveryStatus: 'Pending',
+        products: productIds,
+        payment_id: paymentMethod === 'cod' ? 'COD' : 'ONLINE_PENDING',
+        paymentMethod: paymentMethod // Add the missing property
+      };
       
-      // For now, just log the order details
-      console.log('Order submitted:', {
-        items: cartItems,
-        totalAmount: cartTotals.total,
-        address,
-        paymentMethod
-      });
+      console.log('Submitting order with user:', user);
+      console.log('Payment method (stored locally):', paymentMethod);
       
-      // Simulate successful order
-      toast('Order placed successfully!');
+      // Call the API to create the order
+      const result = await createOrder(orderData);
       
-      // Clear cart
-      clearCart();
-      
-      // Redirect to order confirmation or home
-      router.push('/');
+      if (result.success) {
+        // If it's a COD order, we can store that information locally
+        if (paymentMethod === 'cod') {
+          // Store the order with payment method in localStorage
+          const myOrders = JSON.parse(localStorage.getItem('myOrders') || '[]');
+          myOrders.push({
+            orderId: result.order.id,
+            paymentMethod: 'cod',
+            date: new Date().toISOString(),
+            amount: cartTotals.total
+          });
+          localStorage.setItem('myOrders', JSON.stringify(myOrders));
+          
+          toast('Cash on Delivery order placed successfully!');
+        } else {
+          // For online payment
+          toast('Order placed successfully!');
+        }
+        
+        // Clear cart
+        clearCart();
+        
+        // Redirect to order confirmation or home
+        router.push('/');
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('Error placing order:', error);
       toast('There was an error placing your order. Please try again.');
     }
   };
-  
+
+
+  // Render the component
   if (!isAuthenticated || cartItems.length === 0) {
     return null; // Will redirect in useEffect
   }

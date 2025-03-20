@@ -706,6 +706,143 @@ export const searchProducts = async (searchTerm: string, pincode?: string) => {
 
 
 
+// Add this interface to define the order structure
+export interface OrderData {
+  name: string;
+  email: string;
+  phone: string;
+  pincode: string;
+  address: string;
+  totalOrderValue: number;
+  userid?: number;
+  city: string;
+  DeliveryStatus?: string;
+  paymentMethod: string; // Add payment method
+  codToken?: string;     // Add COD token
+  vendor?: number;
+  products: number[];
+}
+
+// Add this helper function to get the JWT token
+export const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  // First try to get it directly
+  const token = localStorage.getItem('token');
+  if (token) return token;
+  
+  // If not found, try to get it from the user object
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.jwt || null;
+    }
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+  }
+  
+  return null;
+};
+
+// Add this helper function to generate a COD token
+const generateCODToken = (): string => {
+  // Generate a random string of 8 characters
+  const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
+  
+  // Add a timestamp component for uniqueness
+  const timestamp = Date.now().toString(36).toUpperCase();
+  
+  // Combine them with a prefix
+  return `COD-${randomPart}-${timestamp}`;
+};
+
+// Add this function to create an order
+export const createOrder = async (orderData: OrderData) => {
+  try {
+    console.log('Creating order with data:', orderData);
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add authorization header if token is available
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      console.log('Using JWT token for order creation:', token);
+    } else {
+      console.warn('No JWT token available for order creation');
+    }
+    
+    // Format the data according to Strapi's structure
+    // The format for relationships depends on your Strapi version
+    const formattedProducts = orderData.products.map((productId) => ({ id: productId }));
+
+    console.log('Formatted products:', formattedProducts);
+    const formattedData: {
+      data: {
+        name: string;
+        email: string;
+        phone: string;
+        pincode: string;
+        address: string;
+        totalOrderValue: number;
+        userid?: number;
+        city: string;
+        DeliveryStatus: string;
+        products: { id: number }[];
+        payment_id?: string;
+        vendor?: number;
+      };
+    } = {
+      data: {
+        name: orderData.name,
+        email: orderData.email,
+        phone: orderData.phone,
+        pincode: orderData.pincode,
+        address: orderData.address,
+        totalOrderValue: orderData.totalOrderValue,
+        userid: orderData.userid,
+        city: orderData.city,
+        DeliveryStatus: orderData.DeliveryStatus || 'Pending',
+        // For Strapi v4, use this format for products relationship
+        products: formattedProducts,
+        // Use payment_id instead of paymentMethod
+        // payment_id: orderData.payment_id,
+        vendor: orderData.vendor
+      }
+    };
+    console.log('Sending formatted data to API:', JSON.stringify(formattedData));
+    
+    const response = await fetch(`${API_URL}/api/orders`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(formattedData)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Order creation error response:', errorText);
+      throw new Error(`Error creating order: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Order created successfully:', data);
+    
+    return {
+      success: true,
+      order: data.data
+    };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    };
+  }
+};
+
 export default {
   fetchProducts,
   fetchProductBySlug,
@@ -718,5 +855,8 @@ export default {
   fetchCategoryBySlugAndPincode,
   fetchProductsByCategory,
   vendorLogin,
-  searchProducts
-}; 
+  searchProducts,
+  createOrder,
+  getAuthToken,
+  generateCODToken,
+};

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { vendorLogin } from '@/services/api';
+import { getToken } from '@/app(route)/vendor/page';
+// import { createToken } from '@/lib/jwt';
 
 // Define the vendor login form data type
 interface VendorLoginFormData {
@@ -60,7 +63,10 @@ export default function VendorLoginPage() {
       
       // Store vendor info in localStorage
       localStorage.setItem('vendorInfo', JSON.stringify(loginResult.vendor));
-      localStorage.setItem('vendorToken', loginResult.jwt);
+
+      // const token = createToken(loginResult.vendor);
+      const token = await getToken(loginResult?.vendor);
+      localStorage.setItem('token', token);
       
       // Show success message
       toast.success('Login successful!');
@@ -69,9 +75,23 @@ export default function VendorLoginPage() {
       router.push('/vendor/orders');
       
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error instanceof Error ? error.message : 'An unknown error occurred');
-      toast.error(error instanceof Error ? error.message : 'Login failed. Please try again.');
+      console.error('Login error:', error);      
+      let errorMessage = 'An unknown error occurred';
+      if (typeof error === 'object' && error !== null) {
+        if ('response' in error && error.response && typeof error.response === 'object' && error.response !== null && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && error.response.data !== null && 'error' in error.response.data && error.response.data.error && typeof error.response.data.error === 'object' && error.response.data.error !== null) {
+          // Try to extract a more specific error message from Strapi's response
+          if ('message' in error.response.data.error && typeof error.response.data.error.message === 'string') {
+            errorMessage = error.response.data.error.message || errorMessage;
+          }
+          if ('details' in error.response.data.error && error.response.data.error.details && Array.isArray(error.response.data.error.details) && error.response.data.error.details.length > 0 && 'messages' in error.response.data.error.details[0] && Array.isArray(error.response.data.error.details[0].messages) && error.response.data.error.details[0].messages.length > 0 && 'id' in error.response.data.error.details[0].messages[0] && typeof error.response.data.error.details[0].messages[0].id === 'string') {
+            errorMessage = error.response.data.error.details[0].messages[0].id || errorMessage;
+          }
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

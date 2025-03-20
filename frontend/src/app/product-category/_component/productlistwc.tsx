@@ -294,7 +294,7 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
             <div key={productId} className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
               {/* Image section with link to product detail */}
               <Link href={`/product/${productSlug}`} className="block">
-                <div className="relative h-20 sm:h-32 w-full bg-gray-200">
+                <div className="relative h-28 sm:h-32 w-full bg-gray-200">
                   {imageUrl ? (
                     <>
                       <Image

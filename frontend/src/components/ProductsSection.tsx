@@ -115,7 +115,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
       id: product.id,
       name: product.attributes.name,
       price: product.attributes.sellingPrice,
-      quantity: 0, //#bug1 fixing the cart add quantity by 2 to 1
+      quantity: 1, //#bug1 fixing the cart add quantity by 2 to 1
       image: imageUrl || undefined,
       slug: product.attributes.slug
     };

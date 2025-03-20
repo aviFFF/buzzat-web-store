@@ -446,7 +446,6 @@ export interface ApiOrderOrder extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.String & Schema.Attribute.Required;
-    banner: Schema.Attribute.Relation<'oneToOne', 'api::banner.banner'>;
     city: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -462,6 +461,7 @@ export interface ApiOrderOrder extends Struct.CollectionTypeSchema {
     name: Schema.Attribute.String & Schema.Attribute.Required;
     phone: Schema.Attribute.String & Schema.Attribute.Required;
     pincode: Schema.Attribute.String & Schema.Attribute.Required;
+    products: Schema.Attribute.Relation<'oneToMany', 'api::product.product'>;
     publishedAt: Schema.Attribute.DateTime;
     totalOrderValue: Schema.Attribute.Integer & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
@@ -499,6 +499,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     mrp: Schema.Attribute.Decimal & Schema.Attribute.Required;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    order: Schema.Attribute.Relation<'manyToOne', 'api::order.order'>;
     publishedAt: Schema.Attribute.DateTime;
     sellingPrice: Schema.Attribute.Decimal & Schema.Attribute.Required;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;

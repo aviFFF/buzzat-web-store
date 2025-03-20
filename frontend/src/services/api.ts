@@ -599,6 +599,113 @@ export const fetchProductsByCategory = async (categoryName: string) => {
   }
 };
 
+// Add this function to your existing api.ts file
+
+export const searchProducts = async (searchTerm: string, pincode?: string) => {
+  try {
+    console.log(`Searching for products with term: "${searchTerm}"${pincode ? ` in pincode: ${pincode}` : ''}`);
+    
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    
+    // Add populate parameter to get all related data
+    queryParams.append('populate', '*');
+    
+    // Add search filter - search in both name and description
+    if (searchTerm) {
+      // Using containsi for case-insensitive search
+      queryParams.append('filters[$or][0][name][$containsi]', searchTerm);
+      queryParams.append('filters[$or][1][description][$containsi]', searchTerm);
+    }
+    
+    // Make the API request
+    const url = `${API_URL}/api/products?${queryParams.toString()}`;
+    console.log('Search API URL:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
+      throw new Error(`Error searching products: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`Found ${data.data?.length || 0} products before pincode filtering`);
+    
+    // If pincode is provided, filter products by vendor service area
+    if (pincode && data.data && data.data.length > 0) {
+      console.log(`Filtering products for pincode: ${pincode}`);
+      
+      try {
+        // First, get all vendors that service this pincode
+        const vendorsUrl = `${API_URL}/api/vendors?filters[service_pincodes][$contains]=${pincode}`;
+        console.log('Vendors API URL:', vendorsUrl);
+        
+        const vendorsResponse = await fetch(vendorsUrl);
+        
+        if (!vendorsResponse.ok) {
+          console.error('Vendor API Error:', await vendorsResponse.text());
+          // If vendor filtering fails, return all products
+          return data;
+        }
+        
+        const vendorsData = await vendorsResponse.json();
+        console.log(`Found ${vendorsData.data?.length || 0} vendors for pincode ${pincode}`);
+        
+        if (!vendorsData.data || vendorsData.data.length === 0) {
+          // No vendors for this pincode, return empty results
+          return { ...data, data: [] };
+        }
+        
+        const vendorIds = vendorsData.data.map((vendor: any) => vendor.id);
+        console.log('Vendor IDs:', vendorIds);
+        
+        // Filter products to only include those from vendors that service the pincode
+        const filteredProducts = data.data.filter((product: any) => {
+          // Check if the product has vendors array
+          if (Array.isArray(product.vendors) && product.vendors.length > 0) {
+            // Check if any of the product's vendors service this pincode
+            const hasServiceableVendor = product.vendors.some((vendor: any) => 
+              vendorIds.includes(vendor.id)
+            );
+            
+            if (!hasServiceableVendor) {
+              console.log(`Product ${product.id} excluded - no vendor services pincode ${pincode}`);
+            }
+            
+            return hasServiceableVendor;
+          }
+          
+          // Legacy format check (for attributes.vendor structure)
+          const vendorId = product.attributes?.vendor?.data?.id;
+          const isAvailable = vendorIds.includes(vendorId);
+          
+          if (!isAvailable) {
+            console.log(`Product ${product.id} excluded - vendor ${vendorId || 'undefined'} doesn't service pincode ${pincode}`);
+          }
+          
+          return isAvailable;
+        });
+        
+        console.log(`Returning ${filteredProducts.length} products after pincode filtering`);
+        return { ...data, data: filteredProducts };
+      } catch (filterError) {
+        console.error('Error during pincode filtering:', filterError);
+        // If filtering fails, return all products
+        return data;
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error searching products:', error);
+    throw error;
+  }
+};
+
+
+
 export default {
   fetchProducts,
   fetchProductBySlug,
@@ -610,5 +717,6 @@ export default {
   fetchCategoriesWithProductsByPincode,
   fetchCategoryBySlugAndPincode,
   fetchProductsByCategory,
-  vendorLogin
+  vendorLogin,
+  searchProducts
 }; 

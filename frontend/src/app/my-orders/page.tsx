@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Header from '@/components/Header';
 import Image from 'next/image';
 
 // Sample order data

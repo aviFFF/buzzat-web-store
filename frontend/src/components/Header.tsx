@@ -10,6 +10,7 @@ import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { CartItem, getCartItems, updateCartItemQuantity, getCartTotals } from '@/utils/cartUtils';
+import SearchBar from './SearchBar';
 
 interface Category {
   id: number;
@@ -337,30 +338,7 @@ export default function Header({
           </div>
           
           {/* Search Bar */}
-          <div className="flex-grow w-full">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for products..."
-                className="w-full py-2.5 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </span>
-              <button 
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-700"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </form>
-          </div>
+         <SearchBar className='w-full '/>
           
           {/* Account & Cart */}
           <div className="flex items-center space-x-4">
@@ -567,20 +545,8 @@ export default function Header({
               
               {/* Search Bar (Mobile) */}
               <div className="flex-grow">
-                <form onSubmit={handleSearch} className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full py-2 pl-9 pr-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
-                  />
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                </form>
+                <SearchBar className='w-full '/>
+                
               </div>
             </div>
           </div>
@@ -591,10 +557,10 @@ export default function Header({
       {showPincodePopup && (
         <PincodePopup 
           onClose={() => setShowPincodePopup(false)} 
-          onPincodeSet={(newPincode, newIsServiceable, newMessage) => {
-            onPincodeChange(newPincode, newIsServiceable, newMessage);
-            setShowPincodePopup(false);
-          }}
+          // onPincodeSet={(newPincode, newIsServiceable, newMessage) => {
+          //   onPincodeChange(newPincode, newIsServiceable, newMessage);
+          //   setShowPincodePopup(false);
+          // }}
         />
       )}
       

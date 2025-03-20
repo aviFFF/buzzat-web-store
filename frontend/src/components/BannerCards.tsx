@@ -147,7 +147,7 @@ export default function BannerCards() {
         
         {/* Mobile - Single Banner Card */}
         {banners[0] && (
-          <div className="md:hidden">
+          <div className="hidden">
             <Link 
               href={banners[0].link}
               className="block rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"

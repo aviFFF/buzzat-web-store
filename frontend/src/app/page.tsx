@@ -85,7 +85,7 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
         <div className="w-full max-w-7xl mx-auto">
           {/* Banner Cards Section */}
-          <section className="mb-8">
+          <section className="md:block hidden md:mb-8">
             <BannerCards />
           </section>
           
@@ -118,7 +118,6 @@ export default function Home() {
         {showPincodePopup && (
           <PincodePopup 
             onClose={() => setShowPincodePopup(false)} 
-            onPincodeSet={handlePincodeSet}
           />
         )}
       </main>

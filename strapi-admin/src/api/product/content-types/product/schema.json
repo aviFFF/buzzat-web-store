@@ -62,6 +62,12 @@
       "relation": "manyToMany",
       "target": "api::vendor.vendor",
       "mappedBy": "products"
+    },
+    "order": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::order.order",
+      "inversedBy": "products"
     }
   }
 }

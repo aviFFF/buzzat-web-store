@@ -42,7 +42,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
       {categories.map((category) => {
         // Get name and slug from either attributes or direct properties
         const name = category.attributes?.name || category.name || '';
@@ -93,7 +93,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
             key={category.id}
             className="group"
           >
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden text-center p-4 transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden text-center p-2 md:p-4 transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
               <div className="relative h-24 w-24 mx-auto mb-3">
                 {iconUrl ? (
                   <Image
@@ -112,7 +112,7 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
                   </div>
                 )}
               </div>
-              <h3 className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+              <h3 className="text-sm font-medium text-nowrap text-gray-800 group-hover:text-blue-600 transition-colors">
                 {name}
               </h3>
             </div>

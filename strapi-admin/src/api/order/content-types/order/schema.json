@@ -40,11 +40,6 @@
     "city": {
       "type": "string"
     },
-    "banner": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::banner.banner"
-    },
     "DeliveryStatus": {
       "type": "enumeration",
       "enum": [
@@ -59,6 +54,12 @@
       "relation": "manyToOne",
       "target": "api::vendor.vendor",
       "inversedBy": "orders"
+    },
+    "products": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::product.product",
+      "mappedBy": "order"
     }
   }
 }

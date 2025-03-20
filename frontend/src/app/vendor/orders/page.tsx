@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { format } from 'date-fns'
 
 // Mock order data
 const initialOrders = [
@@ -62,7 +64,7 @@ export default function VendorOrders() {
       router.push('/vendor');
       return;
     }
-    
+
     try {
       const parsedVendorInfo = JSON.parse(storedVendorInfo);
       setVendorInfo(parsedVendorInfo);
@@ -87,27 +89,27 @@ export default function VendorOrders() {
           { id: 13, name: 'Cereal', quantity: 1, price: 4.29 }
         ]
       };
-      
+
       setOrders(prev => [newOrder, ...prev]);
       setNotifications(prev => [`New order #${newOrder.id} from ${newOrder.customer}`, ...prev]);
       setShowNotification(true);
-      
+
       // Hide notification after 5 seconds
       setTimeout(() => {
         setShowNotification(false);
       }, 5000);
     }, 10000); // Show notification after 10 seconds
-    
+
     return () => clearTimeout(timer);
   }, []);
 
   const updateOrderStatus = (orderId: number, newStatus: string) => {
-    setOrders(orders.map(order => 
+    setOrders(orders.map(order =>
       order.id === orderId ? { ...order, status: newStatus } : order
     ));
     setNotifications(prev => [`Order #${orderId} status updated to ${newStatus}`, ...prev]);
     setShowNotification(true);
-    
+
     // Hide notification after 5 seconds
     setTimeout(() => {
       setShowNotification(false);
@@ -116,16 +118,15 @@ export default function VendorOrders() {
 
   const handleLogout = () => {
     // Clear vendor info from localStorage
-    localStorage.removeItem('vendorInfo');
-    localStorage.removeItem('vendorToken');
-    
+    const data = ['vendorInfo', 'token'];
+    data.forEach(item => localStorage.removeItem(item));
+
     // Show success message
     toast.success('Logged out successfully');
-    
-    // Redirect to vendor login page
-    router.push('/vendor');
-  };
 
+    // Redirect to vendor login page
+    router.replace('/vendor');
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -249,7 +250,9 @@ export default function VendorOrders() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <p>
-                        {new Date(order.date).toLocaleDateString()} at {new Date(order.date).toLocaleTimeString()}
+                        {/* {new Date(order.date).toLocaleDateString()} at {new Date(order.date).toLocaleTimeString()} */}
+                        {format(new Date(order.date), 'dd/MM/yyyy')} at {format(new Date(order.date), 'HH:mm')}
+
                       </p>
                     </div>
                   </div>
@@ -315,7 +318,7 @@ export default function VendorOrders() {
         ) : (
           <ul className="divide-y divide-gray-200 bg-white shadow overflow-hidden sm:rounded-md">
             {notifications.map((notification
-, index) => (
+              , index) => (
               <li key={index} className="px-4 py-4 sm:px-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">

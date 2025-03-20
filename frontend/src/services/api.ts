@@ -685,7 +685,64 @@ export const fetchProductsByCategory = async (categoryName: string) => {
   }
 };
 
+
+// New API functions for orders
+export interface Order {
+  id: number;
+  userId: number; // Or string, depending on your user ID type
+  // ... other order attributes (e.g., date, total, status, items) ...
+  items: Array<{
+    productId: number; // Or string, depending on your product ID type
+    quantity: number;
+    // ... other item attributes ...
+  }>;
+}
+
+export const fetchOrdersByUserId = async (userId: number) => {
+  try {
+    // const token = localStorage.getItem("token");
+    
+    const response = await fetch(`${API_URL}/api/orders?filters[userId][$eq]=${userId}&populate=*`); // Adjust /api/orders as needed
+
+    if (!response.ok) {
+      throw new Error(`Error fetching orders: ${response.statusText}`);
+    }
+
+
+    const data = await response.json();
+    return data.data; // Assuming Strapi-like response structure
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    throw error;
+  }
+};
+
+export const createOrder = async (userId: number, orderData: Omit<Order, 'id'>) => {
+  try {
+    const response = await fetch(`${API_URL}/api/orders`, { // Adjust /api/orders as needed
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      }, 
+      body: JSON.stringify({ data: { ...orderData, userId } }), // Adjust data structure as needed
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error.message || response.statusText);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error creating order:", error);
+    throw error;
+  }
+};
+
 export default {
+  fetchOrdersByUserId,
+  createOrder,
   fetchProducts,
   fetchProductBySlug,
   fetchCategories,

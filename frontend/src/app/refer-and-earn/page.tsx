@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Header from '@/components/Header';
 
 export default function ReferAndEarnPage() {
   const { isAuthenticated } = useAuth();
@@ -32,13 +31,6 @@ export default function ReferAndEarnPage() {
   
   return (
     <>
-      <Header 
-        pincode={pincode}
-        isServiceable={isServiceable}
-        deliveryMessage={deliveryMessage}
-        onPincodeChange={handlePincodeChange}
-      />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Refer & Earn</h1>

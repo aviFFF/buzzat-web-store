@@ -44,9 +44,9 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-row gap-6">
         {/* Categories Sidebar */}
-        <div className="w-full md:w-1/4 lg:w-1/5">
+        <div className="w-[30%] md:w-1/4 lg:w-1/5">
           <CategoryList 
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
@@ -54,7 +54,7 @@ export default function CategoryPage() {
         </div>
         
         {/* Products Grid */}
-        <div className="w-full md:w-3/4 lg:w-4/5">
+        <div className="w-[70%] md:w-3/4 lg:w-4/5">
           <ProductListWithCategory 
             categorySlug={selectedCategory}
             categoryName={selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : 'All Products'}

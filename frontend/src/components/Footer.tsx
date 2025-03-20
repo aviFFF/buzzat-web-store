@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ export default function Footer() {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would handle the newsletter subscription
-    alert(`Thank you for subscribing with ${email}!`);
+    toast(`Thank you for subscribing with ${email}!`);
     setEmail('');
   };
   

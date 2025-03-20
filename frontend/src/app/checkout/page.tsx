@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import { getCartItems, getCartTotals, clearCart, CartItem } from '@/utils/cartUtils';
+import { toast } from 'sonner';
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
@@ -135,7 +136,7 @@ export default function CheckoutPage() {
       });
       
       // Simulate successful order
-      alert('Order placed successfully!');
+      toast('Order placed successfully!');
       
       // Clear cart
       clearCart();
@@ -144,7 +145,7 @@ export default function CheckoutPage() {
       router.push('/');
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('There was an error placing your order. Please try again.');
+      toast('There was an error placing your order. Please try again.');
     }
   };
   

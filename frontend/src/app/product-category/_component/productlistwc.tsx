@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { fetchProductsByCategory } from '@/services/api';
 import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity } from '@/utils/cartUtils';
+import { toast } from 'sonner';
 
 interface Product {
   id: number;
-  attributes: {
+  attributes?: {
     name: string;
     description?: string;
     mrp: number;
@@ -32,6 +33,21 @@ interface Product {
           slug: string;
         };
       }[];
+    };
+  };
+  // Direct properties for alternative data structure
+  name?: string;
+  description?: string;
+  mrp?: number;
+  sellingPrice?: number;
+  price?: number;
+  slug?: string;
+  image?: {
+    url?: string;
+    data?: {
+      attributes?: {
+        url: string;
+      };
     };
   };
 }
@@ -117,11 +133,35 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
   }, []);
 
   const getProductImageUrl = (product: Product): string | null => {
-    // Check for image in attributes structure (from API)
-    if (product.attributes?.image?.data?.attributes?.url) {
-      return product.attributes.image.data.attributes.url;
+    const strapiUrl = 'http://localhost:1337'; // Hardcode for testing
+    
+    // Handle image as array (from the provided data structure)
+    if (Array.isArray(product.image) && product.image.length > 0) {
+      const firstImage = product.image[0];
+      console.log('First image in array:', firstImage);
+      if (firstImage.url) {
+        return `${strapiUrl}${firstImage.url}`;
+      }
     }
-
+    
+    // Log the product structure to understand what we're working with
+    console.log('Getting image URL for product:', product.id);
+    
+    // Check for image in attributes structure (from API)
+    if (product?.image?.data?.attributes?.url) {
+      return product?.image?.data?.attributes?.url;
+    }
+    
+    // Check for direct image property (alternative structure)
+    if (product.image?.url) {
+      return product.image.url;
+    }
+    
+    // Check for nested image data without attributes wrapper
+    if (product.image?.data?.attributes?.url) {
+      return product.image.data.attributes.url;
+    }
+    
     // If no image is found
     console.log('No image found for product:', product.id);
     return null;
@@ -144,28 +184,35 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
 
   const addToCart = (product: Product) => {
     const imageUrl = getProductImageUrl(product);
+    
+    // Get product properties, handling different data structures
+    const productId = product.id;
+    const productName = product.attributes?.name || product.name || 'Product';
+    const productSlug = product.attributes?.slug || product.slug || `product-${productId}`;
+    const productPrice = product.attributes?.sellingPrice || product.sellingPrice || product.price || 0;
 
     // Create cart item
     const newItem: CartItem = {
-      id: product.id,
-      name: product.attributes.name,
-      price: product.attributes.sellingPrice,
+      id: productId,
+      name: productName,
+      price: productPrice,
       quantity: 1,
       image: imageUrl || undefined,
-      slug: product.attributes.slug
+      slug: productSlug
     };
 
     // Add to cart using utility function
     addItemToCart(newItem);
+    toast.success(`Added ${product.name || 'Product'} to cart`);
 
     // Update local state
     setCartQuantities(prev => ({
       ...prev,
-      [product.id]: (prev[product.id] || 0) + 1
+      [productId]: (prev[productId] || 0)
     }));
 
     // Show visual feedback
-    setAddedToCartId(product.id);
+    setAddedToCartId(productId);
     setTimeout(() => {
       setAddedToCartId(null);
     }, 1500);
@@ -180,6 +227,8 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
       setCartQuantities(prev => {
         const updated = { ...prev };
         delete updated[productId];
+        toast.success(`Removed ${products.find(p => p.id === productId)?.name || 'Product'} from cart`);
+
         return updated;
       });
     } else {
@@ -187,6 +236,7 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
         ...prev,
         [productId]: newQuantity
       }));
+      
     }
   };
 
@@ -210,42 +260,50 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          {categoryName || (categorySlug ? categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1) : 'All Products')}
+            { ' Products'}
+        
         </h1>
-        <p className="text-gray-600 mt-1">
-          {products.length} {products.length === 1 ? 'product' : 'products'} available
-        </p>
       </div>
       
-      {/* Products Grid - Mirroring ProductsSection.tsx */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+      {/* Products Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
         {products.map((product) => {
-          // Check if product has valid attributes and slug
-          if (!product.attributes || !product.attributes.slug) {
-            console.warn('Product missing slug:', product.id);
+          // Log the product to see its structure
+          console.log('Rendering product:', product);
+          
+          // Check if product has valid structure for rendering
+          const hasValidStructure = product && product.id && (product.attributes?.slug || product.slug || product.attributes?.name || product.name);
+          if (!hasValidStructure) {
+            console.warn('Product missing required data:', product);
             return null;
           }
 
+          // Get product properties, handling different data structures
+          const productId = product.id;
+          const productName = product.attributes?.name || product.name || 'Product';
+          const productSlug = product.attributes?.slug || product.slug || `product-${productId}`;
+          const productPrice = product.attributes?.sellingPrice || product.sellingPrice || product.price || 0;
+          const productMrp = product.attributes?.mrp || product.mrp || productPrice;
+          
           const imageUrl = getProductImageUrl(product);
-          const quantity = cartQuantities[product.id] || 0;
-          const imgStatus = imageStatus[product.id] || 'loading';
-          const isAddedToCart = addedToCartId === product.id;
+          const quantity = cartQuantities[productId] || 0;
+          const imgStatus = imageStatus[productId] || 'loading';
+          const isAddedToCart = addedToCartId === productId;
 
           return (
-            <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
+            <div key={productId} className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
               {/* Image section with link to product detail */}
-              <Link href={`/product/${product.attributes.slug}`} className="block">
-                <div className="relative h-28 sm:h-32 w-full bg-gray-200">
+              <Link href={`/product/${productSlug}`} className="block">
+                <div className="relative h-20 sm:h-32 w-full bg-gray-200">
                   {imageUrl ? (
                     <>
                       <Image
                         src={imageUrl}
-                        alt={product.attributes.name}
+                        alt={productName}
                         fill
-                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
-                        className="object-cover"
-                        onLoad={() => handleImageLoad(product.id)}
-                        onError={() => handleImageError(product.id)}
+                        className="object-center"
+                        onLoad={() => handleImageLoad(productId)}
+                        onError={() => handleImageError(productId)}
                         unoptimized={true}
                       />
 
@@ -282,26 +340,26 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
 
               <div className="p-2 sm:p-3">
                 {/* Product name with link */}
-                <Link href={`/product/${product.attributes.slug}`} className="block">
+                <Link href={`/product/${productSlug}`} className="block">
                   <h3 className="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors line-clamp-2 h-10">
-                    {product.attributes.name}
+                    {productName}
                   </h3>
                 </Link>
 
-                <div className="mt-1 flex items-center justify-between">
-                  <div>
+                <div className="mt-1 flex flex-col items-center justify-between">
+                  <div className='flex text-left'>
                     <span className="text-sm font-bold text-gray-900">
-                      ₹{product.attributes.sellingPrice}
+                      ₹{productPrice}
                     </span>
-                    {product.attributes.mrp > product.attributes.sellingPrice && (
+                    {productMrp > productPrice && (
                       <span className="ml-1 text-xs text-gray-500 line-through">
-                        ₹{product.attributes.mrp}
+                        ₹{productMrp}
                       </span>
                     )}
                   </div>
-                  {product.attributes.mrp > product.attributes.sellingPrice && (
+                  {productMrp > productPrice && (
                     <span className="text-xs text-green-600 font-medium">
-                      {Math.round((1 - product.attributes.sellingPrice / product.attributes.mrp) * 100)}% off
+                      {Math.round((1 - productPrice / productMrp) * 100)}% off
                     </span>
                   )}
                 </div>
@@ -320,7 +378,7 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
                     // Quantity Controls
                     <div className="flex items-center justify-between border border-gray-300 rounded-lg overflow-hidden">
                       <button
-                        onClick={() => updateQuantity(product.id, quantity - 1)}
+                        onClick={() => updateQuantity(productId, quantity - 1)}
                         className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                       >
                         -
@@ -329,7 +387,7 @@ export default function ProductListWithCategory({ categorySlug, categoryName }: 
                         {quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(product.id, quantity + 1)}
+                        onClick={() => updateQuantity(productId, quantity + 1)}
                         className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm"
                       >
                         +

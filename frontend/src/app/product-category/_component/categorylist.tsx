@@ -175,8 +175,8 @@ export default function CategoryList({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sticky top-24">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Categories</h2>
+    <div className="bg-white rounded-lg shadow-sm p-4 items-center justify-center sticky top-24">
+      <h2 className="text-xs text-center md:text-lg justify-center items-center font-bold text-gray-900 mb-4 border-b pb-2">Categories</h2>
       <div className="space-y-2">
         {categories.map((category) => {
           const slug = getCategorySlug(category);
@@ -190,7 +190,7 @@ export default function CategoryList({
             <Link 
               href={`/product-category/${encodeURIComponent(slug)}`}
               key={category.id}
-              className={`flex items-center p-2 rounded-lg transition-colors ${
+              className={`flex flex-col md:flex-row text-xs text-center items-center p-2 rounded-full md:rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-blue-50 text-blue-700 font-medium' 
                   : 'hover:bg-gray-50 text-gray-700'
@@ -211,12 +211,12 @@ export default function CategoryList({
                     unoptimized
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full ">
                     <span className="text-gray-500">{name.charAt(0)}</span>
                   </div>
                 )}
               </div>
-              <span className="text-sm">{name}</span>
+              <span className="text-xs">{name}</span>
             </Link>
           );
         })}

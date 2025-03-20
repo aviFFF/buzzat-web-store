@@ -6,20 +6,29 @@ import {
   savePincodeToLocalStorage, 
   getPincodeFromLocalStorage 
 } from '@/services/pincode';
+import { usePincode } from '@/context/PincodeContext';
 
 interface PincodePopupProps {
   onClose: () => void;
-  onPincodeSet: (pincode: string, isServiceable: boolean, message: string) => void;
 }
 
-export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProps) {
+export default function PincodePopup({ onClose }: PincodePopupProps) {
   const [pincode, setPincode] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const popupRef = useRef<HTMLDivElement>(null);
+  
+  // Use the pincode context
+  const { updatePincode } = usePincode();
 
-
+  // Initialize with saved pincode if available
+  useEffect(() => {
+    const { pincode: savedPincode } = getPincodeFromLocalStorage();
+    if (savedPincode) {
+      setPincode(savedPincode);
+    }
+  }, []);
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ''); // Only allow digits
@@ -46,11 +55,8 @@ export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProp
     try {
       const response = await checkPincodeServiceability(pincode);
       
-      // Save to localStorage
-      savePincodeToLocalStorage(pincode, response.serviceable);
-      
-      // Notify parent component
-      onPincodeSet(
+      // Update the context with the new pincode information
+      updatePincode(
         pincode, 
         response.serviceable, 
         response.message || (response.serviceable ? 'Delivery available in your area' : 'No delivery available in your area')
@@ -137,4 +143,4 @@ export default function PincodePopup({ onClose, onPincodeSet }: PincodePopupProp
       </div>
     </div>
   );
-} 
+}
